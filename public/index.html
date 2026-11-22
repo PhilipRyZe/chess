@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Schach online spielen</title>
 <meta name="description" content="Kostenlos Schach online spielen. Spiel erstellen, Code teilen, loslegen.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%237c5cf5'/%3E%3Ctext x='50' y='72' font-size='64' text-anchor='middle' fill='%23ffb86b'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
@@ -38,12 +38,18 @@
     --pwe: #170f3a;
     --pb: #170f3a;
     --pbe: rgba(255, 255, 255, 0.55);
-    --bs: min(94vw, 640px);
+    --chrome: 130px;
+    --vhf: 100vh;
+    --bs: max(260px, min(calc(100vw - 28px), 720px));
     --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
     --body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    font-size: clamp(16px, calc(12px + 0.5vw), 19px);
+  }
   body {
     margin: 0;
     min-height: 100vh;
@@ -59,13 +65,14 @@
   /* ---------- Menü ---------- */
   header.top {
     position: sticky; top: 0; z-index: 20;
+    padding-top: env(safe-area-inset-top);
     backdrop-filter: blur(10px);
     background: var(--navbg);
     border-bottom: 1px solid var(--line);
   }
   .top-in {
     max-width: 1240px; margin: 0 auto;
-    padding: 12px 18px;
+    padding: 12px max(18px, env(safe-area-inset-right)) 12px max(18px, env(safe-area-inset-left));
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
   .logo {
@@ -89,7 +96,10 @@
   nav a.active { color: var(--ink); background: var(--g1); font-weight: 700; }
   a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 
-  main { max-width: 1240px; margin: 0 auto; padding: 32px 18px 64px; }
+  main {
+    max-width: 1240px; margin: 0 auto;
+    padding: 32px max(18px, env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  }
   .view { display: none; }
   .view.active { display: block; }
   .hidden { display: none !important; }
@@ -170,7 +180,7 @@
 
   /* ---------- Spielansicht ---------- */
   .play {
-    display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start;
+    display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; justify-items: center;
   }
   .boardwrap { width: var(--bs); position: relative; }
   .gboard {
@@ -218,7 +228,7 @@
     .sq { transition: background-color .1s; }
   }
 
-  .side { display: grid; gap: 14px; min-width: 240px; max-width: 440px; }
+  .side { display: grid; gap: 14px; width: var(--bs); max-width: 100%; min-width: 0; align-content: start; }
   .player {
     display: flex; align-items: center; gap: 12px;
     padding: 12px 14px; border-radius: 14px;
@@ -263,7 +273,7 @@
 
   .moves {
     background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-    padding: 12px 14px; max-height: 220px; overflow-y: auto;
+    padding: 12px 14px; max-height: clamp(120px, calc(var(--bs) - 340px), 420px); overflow-y: auto;
   }
   .moves h3 { font-size: 0.95rem; margin-bottom: 8px; color: var(--muted); font-weight: 500; }
   .moves ol {
@@ -286,9 +296,30 @@
   #promo button { font-size: 2.4rem; line-height: 1; padding: 6px 14px; }
 
   /* ---------- Spielbrett: Größe, Eingabe, Markierungen ---------- */
-  @media (min-width: 861px) {
-    :root { --bs: clamp(320px, min(calc(100vh - 130px), calc(100vw - 420px)), 860px); }
+  /* ---------- Anpassung an Gerät, Tab und Fenstergröße ---------- */
+  @supports (height: 100dvh) { :root { --vhf: 100dvh; } }
+
+  /* Breites Layout: Brett links, Infos rechts. Das Brett richtet sich nach Höhe und Breite des Fensters. */
+  @media (min-width: 900px), (min-width: 700px) and (min-aspect-ratio: 5/4) {
+    :root { --bs: max(280px, min(calc(var(--vhf) - var(--chrome)), calc(100vw - 380px), 1000px)); }
+    .play { grid-template-columns: auto minmax(260px, 460px); justify-content: center; justify-items: stretch; gap: 28px; }
+    .side { width: auto; }
+    body.playing main, body.playing .top-in { max-width: 1560px; }
   }
+
+  /* Niedrige Fenster, zum Beispiel Handy quer: weniger Rand, Kopfleiste scrollt mit */
+  @media (max-height: 560px) {
+    :root { --chrome: 80px; }
+    header.top { position: static; }
+    main { padding-top: 14px; }
+  }
+
+  /* Touch-Geräte: größere Tippflächen */
+  @media (pointer: coarse) {
+    button { min-height: 44px; }
+    nav a { padding-top: 11px; padding-bottom: 11px; }
+  }
+
   #board { touch-action: none; }
   .gboard.myturn { box-shadow: 0 0 0 4px var(--g1), 0 24px 70px var(--shadow); }
   .gboard.myturn .sq.mine { cursor: grab; }
@@ -313,7 +344,7 @@
   .annot { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
 
   /* ---------- Design-Seite ---------- */
-  .gboard.small { --bs: min(88vw, 400px); }
+  .gboard.small { --bs: min(calc(100vw - 36px), 400px); }
   .design { display: grid; grid-template-columns: 1fr auto; gap: 36px; align-items: start; }
   .preview-col { position: sticky; top: 84px; }
   .opt-group { margin-bottom: 26px; }
@@ -353,8 +384,6 @@
   @media (max-width: 860px) {
     .hero { grid-template-columns: 1fr; gap: 28px; }
     .minibd { max-width: 240px; order: -1; justify-self: start; }
-    .play { grid-template-columns: 1fr; }
-    .side { min-width: 0; }
   }
   @media (max-width: 420px) {
     nav a { padding: 8px 8px; font-size: 0.85rem; }
@@ -845,6 +874,7 @@
   function startGame() {
     $("lobby").classList.add("hidden");
     $("gameView").classList.remove("hidden");
+    document.body.classList.add("playing");
     game = new Chess();
     lastMove = null;
     resigned = null;
